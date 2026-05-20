@@ -135,9 +135,9 @@ export default function Dashboard() {
               onChange={e => setForm({ ...form, target_role: e.target.value })}
               className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-gray-300 transition-all"
             >
-              <option value="" className="bg-[#1a1a1a]">Pilih role</option>
+              <option value="" className="bg-white">Pilih role</option>
               {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-              <option value="lainnya">Lainnya...</option>
+              <option value="lainnya" className="bg-white">Lainnya...</option>
             </select>
             {form.target_role === 'lainnya' && (
               <input
