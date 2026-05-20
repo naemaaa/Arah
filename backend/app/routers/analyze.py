@@ -44,6 +44,7 @@ async def analyze_from_form(data: FormInput):
 @router.post("/analyze/cv")
 async def analyze_from_cv(data: CVInput):
     try:
+        print(f"[ANALYZE_CV] Processing: role={data.target_role}, level={data.level}, text_len={len(data.extracted_text)}")
         result = arah_graph.invoke({
             "major": data.major,
             "target_role": data.target_role,
@@ -55,6 +56,7 @@ async def analyze_from_cv(data: CVInput):
             "gap_result": {},
             "roadmap_result": {}
         })
+        print(f"[ANALYZE_CV] Success - got user_skills: {len(result.get('user_skills', []))}")
         return {
             "status": "success",
             "user_skills": result["user_skills"],
@@ -62,4 +64,7 @@ async def analyze_from_cv(data: CVInput):
             "roadmap": result["roadmap_result"]
         }
     except Exception as e:
+        print(f"[ANALYZE_CV] ERROR: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
