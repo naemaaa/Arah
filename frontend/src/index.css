@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body {
+  background-color: #f8fafc;
+  color: #111827;
+}
+
+* {
+  color-scheme: light;
+}
+
+.bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
