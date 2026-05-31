@@ -47,6 +47,49 @@ def get_keywords_for_skills(missing_skills: list[str]) -> list[dict]:
             result.append(item)
     return result[:5]
 
+def get_resources_per_skill(missing_skills: list[str]) -> dict:
+    courses = load_courses()
+    keywords = load_keywords()
+    
+    resources = {}
+    
+    for skill in missing_skills:
+        skill_courses = []
+        for course in courses:
+            if skill in course.get("skills_covered", []):
+                skill_courses.append({
+                    "title": course["title"],
+                    "platform": course["platform"],
+                    "url": course["url"],
+                    "price": course["price"]
+                })
+        
+        skill_keyword = None
+        for kw in keywords:
+            if kw["skill"] == skill:
+                skill_keyword = kw
+                break
+        
+        if skill_courses:
+            resources[skill] = {
+                "type": "course",
+                "items": skill_courses[:2]
+            }
+        elif skill_keyword:
+            resources[skill] = {
+                "type": "search",
+                "youtube": f"https://www.youtube.com/results?search_query={skill_keyword.get('youtube_query', skill).replace(' ', '+')}",
+                "google": f"https://www.google.com/search?q={skill_keyword.get('web_query', skill).replace(' ', '+')}"
+            }
+        else:
+            resources[skill] = {
+                "type": "search",
+                "youtube": f"https://www.youtube.com/results?search_query={skill.replace(' ', '+')}+tutorial",
+                "google": f"https://www.google.com/search?q=belajar+{skill.replace(' ', '+')}+untuk+pemula"
+            }
+    
+    return resources
+
 def generate_roadmap(
     major: str,
     target_role: str,
@@ -85,11 +128,16 @@ Buatkan roadmap belajar dalam format JSON berikut:
 {{
   "summary": "paragraf singkat tentang posisi user dan apa yang perlu dilakukan",
   "background_strength": "jelaskan kenapa background jurusan mereka adalah kekuatan, bukan hambatan",
+  "estimated_duration": "estimasi total waktu realistis (contoh: 6 minggu, 3 bulan, 5 bulan)",
   "weekly_plan": [
-    {{"week": "Minggu 1-2", "focus": "topik utama", "skills": ["skill1"], "action": "langkah konkret"}},
-    {{"week": "Minggu 3-4", "focus": "topik utama", "skills": ["skill1"], "action": "langkah konkret"}},
-    {{"week": "Minggu 5-8", "focus": "topik utama", "skills": ["skill1", "skill2"], "action": "langkah konkret"}},
-    {{"week": "Minggu 9-12", "focus": "topik utama", "skills": ["skill1"], "action": "langkah konkret"}}
+    {{"week": "Minggu 1-2", "focus": "topik utama", "skills": ["skill1"], "action": "langkah konkret", "resources": ["skill1"]}},
+    {{"week": "Minggu 3-4", ...}},
+    ...sesuaikan jumlah fase dengan gap yang ada...
+    Tentukan durasi roadmap secara realistis berdasarkan jumlah dan kompleksitas skill yang perlu dikembangkan:
+        - Gap kecil (1-3 skill): 4-6 minggu
+        - Gap sedang (4-6 skill): 2-3 bulan  
+        - Gap besar (7+ skill): 4-6 bulan
+        Jangan paksa semua roadmap jadi 12 minggu. Sesuaikan jumlah fase dengan kebutuhan nyata.
   ],
   "recommended_courses": [
     {{"title": "nama course", "platform": "platform", "url": "url", "priority": "high/medium"}}
@@ -105,6 +153,12 @@ Kembalikan HANYA JSON, tanpa penjelasan apapun.
         raw = response.content.strip()
         if "```" in raw:
             raw = raw.split("```")[1].replace("json", "").strip()
-        return json.loads(raw)
+        result = json.loads(raw)
+        
+        # inject resources per skill
+        skill_resources = get_resources_per_skill(missing_skills)
+        result["skill_resources"] = skill_resources
+        
+        return result
     except:
         return {"error": "Failed to parse roadmap", "raw": response.content}

@@ -1,23 +1,42 @@
 import { useState, useRef } from 'react'
 import { analyzeFromForm, uploadCV, analyzeFromCV } from '../services/api'
+import logo from '../assets/arah-logo.png'
 
 const ROLES = [
   "Data Analyst", "Data Scientist", "Backend Developer",
   "Frontend Developer", "Mobile Developer", "Product Manager",
   "Business Analyst", "Cloud Practitioner", "UX Designer", "UX Researcher"
 ]
-
 const LEVELS = ["junior", "mid", "senior"]
+
+// ── Helpers (defined OUTSIDE Dashboard so they never get re-created)
+const labelStyle = {
+  display: 'block', fontSize: '10px', fontWeight: 700, color: '#94a3b8',
+  letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px'
+}
+const inputStyle = {
+  width: '100%', background: '#f8fafc', border: '1px solid #e2e8f0',
+  borderRadius: '8px', padding: '10px 12px', fontSize: '13px',
+  color: '#1e293b', outline: 'none', transition: 'border-color 0.2s',
+  lineHeight: 1.4, fontFamily: 'inherit'
+}
+const cardStyle = {
+  background: '#fff', border: '1px solid #e2e8f0',
+  borderRadius: '14px', padding: '16px',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+}
+function mkBadge(color, bg, border) {
+  return { display: 'inline-flex', alignItems: 'center', fontSize: '11px', fontWeight: 700, padding: '4px 11px', borderRadius: '20px', background: bg, color, border: `1px solid ${border}` }
+}
+function mkSkillBadge(color, bg, border) {
+  return { display: 'inline-block', fontSize: '11px', fontWeight: 500, padding: '3px 9px', borderRadius: '6px', background: bg, color, border: `1px solid ${border}` }
+}
 
 export default function Dashboard() {
   const fileRef = useRef(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [inputType, setInputType] = useState('form')
-  const [form, setForm] = useState({
-    major: '',
-    target_role: '',
-    level: 'junior',
-    self_described_skills: ''
-  })
+  const [form, setForm] = useState({ major: '', target_role: '', level: 'junior', self_described_skills: '' })
   const [customRole, setCustomRole] = useState('')
   const [jobDesc, setJobDesc] = useState('')
   const [cvFile, setCvFile] = useState(null)
@@ -26,400 +45,496 @@ export default function Dashboard() {
   const [result, setResult] = useState(null)
 
   const finalRole = form.target_role === 'lainnya' ? customRole : form.target_role
+  const gap = result?.gap
+  const roadmap = result?.roadmap
 
   const handleSubmit = async () => {
     setError('')
-    if (!form.major || !finalRole) {
-      setError('Jurusan dan target karir wajib diisi')
-      return
-    }
+    if (!form.major || !finalRole) { setError('Jurusan dan target karir wajib diisi'); return }
     setIsLoading(true)
     try {
       let res
       if (inputType === 'cv' && cvFile) {
         const uploaded = await uploadCV(cvFile)
-        res = await analyzeFromCV({
-          major: form.major,
-          target_role: finalRole,
-          level: form.level,
-          extracted_text: uploaded.extracted_text,
-          job_desc: jobDesc
-        })
+        res = await analyzeFromCV({ major: form.major, target_role: finalRole, level: form.level, extracted_text: uploaded.extracted_text, job_desc: jobDesc })
       } else {
-        if (!form.self_described_skills) {
-          setError('Deskripsikan skill kamu')
-          setIsLoading(false)
-          return
-        }
+        if (!form.self_described_skills) { setError('Deskripsikan skill kamu'); setIsLoading(false); return }
         res = await analyzeFromForm({ ...form, target_role: finalRole, job_desc: jobDesc })
       }
       setResult(res)
-    } catch (e) {
-      setError('Terjadi kesalahan, coba lagi')
-    } finally {
-      setIsLoading(false)
-    }
+      setDrawerOpen(false)
+    } catch { setError('Terjadi kesalahan, coba lagi') }
+    finally { setIsLoading(false) }
   }
 
   const handleReset = () => {
     setResult(null)
     setForm({ major: '', target_role: '', level: 'junior', self_described_skills: '' })
-    setCustomRole('')
-    setJobDesc('')
-    setCvFile(null)
-    setError('')
+    setCustomRole(''); setJobDesc(''); setCvFile(null); setError('')
   }
 
-  const gap = result?.gap
-  const roadmap = result?.roadmap
-
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-900 flex flex-col">
+    <div style={{ minHeight: '100vh', background: '#f5f6fa', color: '#1e293b', fontFamily: "'Inter',-apple-system,sans-serif", display: 'flex', flexDirection: 'column' }}>
 
-      {/* Navbar */}
-      <nav className="border-b border-gray-200 bg-white px-6 py-3 flex items-center gap-3">
-        <div className="w-6 h-6 bg-slate-900 rounded-md flex items-center justify-center">
-          <div className="w-3 h-3 bg-white rounded-sm" />
+      {/* ── NAVBAR */}
+      <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: '#fff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: '56px', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img src={logo} alt="Arah" style={{ width: '30px', height: '30px', objectFit: 'contain' }} />
+          <span style={{ fontWeight: 800, fontSize: '18px', color: '#1e40af', letterSpacing: '0.06em' }}>ARAH</span>
         </div>
-        <span className="font-semibold text-sm text-slate-900">Dashboard Arah</span>
-        <span className="text-slate-400 text-sm">—</span>
-        <span className="text-slate-500 text-sm">Analisis Karir & Skill</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {result && (
+            <div style={{ display: 'flex', gap: '16px' }}>
+              {['Analisis', 'Roadmap'].map(nav => (
+                <a key={nav} href={`#${nav.toLowerCase()}`} style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', textDecoration: 'none' }}>{nav}</a>
+              ))}
+            </div>
+          )}
+          <button className="hamburger" onClick={() => setDrawerOpen(!drawerOpen)} style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: '8px' }}>
+            {drawerOpen
+              ? <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5"><line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17" x2="20" y2="17" /></svg>
+            }
+          </button>
+        </div>
       </nav>
 
-      <div className="flex flex-1 overflow-hidden">
+      {/* ── BODY */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        {/* Sidebar */}
-        <div className="w-72 border-r border-gray-200 p-6 flex flex-col gap-5 overflow-y-auto bg-white">
+        {/* Mobile backdrop */}
+        {drawerOpen && (
+          <div className="backdrop" onClick={() => setDrawerOpen(false)} style={{ display: 'none', position: 'fixed', inset: 0, top: '56px', background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />
+        )}
+
+        {/* ── SIDEBAR — content INLINED (no sub-component to avoid remount on state change) */}
+        <aside className={drawerOpen ? 'sidebar open' : 'sidebar'} style={{
+          width: '260px', minWidth: '260px', background: '#fff',
+          borderRight: '1px solid #e2e8f0', overflowY: 'auto',
+          display: 'flex', flexDirection: 'column', gap: '16px', padding: '20px 16px',
+          maxHeight: 'calc(100vh - 56px)'
+        }}>
+          {/* Title */}
           <div>
-            <h2 className="font-semibold text-sm text-slate-900">Profil Karir</h2>
-            <p className="text-slate-500 text-xs mt-1">Analisis potensi karir Anda secara instan tanpa perlu mendaftar.</p>
-          </div>
-
-          {/* Input Type Toggle */}
-          <div className="flex bg-slate-100 rounded-lg p-1 gap-1">
-            <button
-              onClick={() => setInputType('form')}
-              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
-                inputType === 'form' ? 'bg-white text-black' : 'text-slate-500'
-              }`}
-            >
-              Isi Manual
-            </button>
-            <button
-              onClick={() => setInputType('cv')}
-              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
-                inputType === 'cv' ? 'bg-white text-black' : 'text-slate-500'
-              }`}
-            >
-              Upload CV
-            </button>
-          </div>
-
-          {/* Jurusan */}
-          <div>
-            <label className="text-xs font-medium text-slate-700 mb-1.5 block">Jurusan</label>
-            <input
-              type="text"
-              placeholder="contoh: Sistem Informasi"
-              value={form.major}
-              onChange={e => setForm({ ...form, major: e.target.value })}
-              className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-gray-300 transition-all"
-            />
+            <h2 style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a', margin: 0 }}>Kustomisasi Analisis</h2>
+            <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '3px', margin: '3px 0 0' }}>Sesuaikan profil untuk hasil presisi</p>
           </div>
 
           {/* Target Karir */}
           <div>
-            <label className="text-xs font-medium text-slate-700 mb-1.5 block">Target Karir</label>
-            <select
-              value={form.target_role}
-              onChange={e => setForm({ ...form, target_role: e.target.value })}
-              className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-gray-300 transition-all"
-            >
-              <option value="" className="bg-white">Pilih role</option>
+            <label style={labelStyle}>Target Karir</label>
+            <select value={form.target_role} onChange={e => setForm({ ...form, target_role: e.target.value })} style={inputStyle}>
+              <option value="">Pilih role...</option>
               {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-              <option value="lainnya" className="bg-white">Lainnya...</option>
+              <option value="lainnya">Lainnya...</option>
             </select>
             {form.target_role === 'lainnya' && (
-              <input
-                type="text"
-                placeholder="contoh: Prompt Engineer"
-                value={customRole}
-                onChange={e => setCustomRole(e.target.value)}
-                className="w-full mt-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-gray-300 transition-all"
-              />
+              <input type="text" placeholder="Contoh: Prompt Engineer" value={customRole}
+                onChange={e => setCustomRole(e.target.value)} style={{ ...inputStyle, marginTop: '6px' }} />
             )}
           </div>
 
           {/* Level */}
           <div>
-            <label className="text-xs font-medium text-slate-700 mb-1.5 block">Level</label>
-            <div className="flex gap-2">
+            <label style={labelStyle}>Level Karir</label>
+            <div style={{ display: 'flex', gap: '6px' }}>
               {LEVELS.map(l => (
-                <button
-                  key={l}
-                  onClick={() => setForm({ ...form, level: l })}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all capitalize ${
-                    form.level === l
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-gray-200 text-slate-500 hover:border-gray-300'
-                  }`}
-                >
-                  {l}
-                </button>
+                <button key={l} onClick={() => setForm({ ...form, level: l })} style={{
+                  flex: 1, padding: '8px 0', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+                  border: form.level === l ? '1.5px solid #3b82f6' : '1.5px solid #e2e8f0',
+                  background: form.level === l ? 'linear-gradient(135deg,#3b82f6,#06b6d4)' : '#f8fafc',
+                  color: form.level === l ? '#fff' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', textTransform: 'capitalize'
+                }}>{l.charAt(0).toUpperCase() + l.slice(1)}</button>
               ))}
             </div>
           </div>
 
-          {/* Skill Input */}
-          {inputType === 'form' ? (
-            <div>
-              <label className="text-xs font-medium text-slate-700 mb-1.5 block">Skill yang kamu punya</label>
-              <textarea
-                rows={3}
-                placeholder="Ceritakan skill kamu..."
-                value={form.self_described_skills}
-                onChange={e => setForm({ ...form, self_described_skills: e.target.value })}
-                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-gray-300 transition-all resize-none"
-              />
+          {/* Jurusan */}
+          <div>
+            <label style={labelStyle}>Jurusan</label>
+            <input type="text" placeholder="Contoh: Sistem Informasi" value={form.major}
+              onChange={e => setForm({ ...form, major: e.target.value })} style={inputStyle} />
+          </div>
+
+          {/* Toggle Manual / CV */}
+          <div>
+            <div style={{ display: 'flex', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '3px', gap: '3px', marginBottom: '12px' }}>
+              {[['form', 'Isi Manual'], ['cv', 'Upload CV']].map(([t, lbl]) => (
+                <button key={t} onClick={() => setInputType(t)} style={{
+                  flex: 1, padding: '7px 0', borderRadius: '6px', fontSize: '12px', fontWeight: 600, border: 'none',
+                  background: inputType === t ? 'linear-gradient(135deg,#3b82f6,#06b6d4)' : 'transparent',
+                  color: inputType === t ? '#fff' : '#94a3b8', cursor: 'pointer', transition: 'all 0.2s'
+                }}>{lbl}</button>
+              ))}
             </div>
-          ) : (
-            <div>
-              <label className="text-xs font-medium text-slate-700 mb-1.5 block">Upload CV (PDF)</label>
-              <div
-                onClick={() => fileRef.current.click()}
-                className="border border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 transition-all"
-              >
-                {cvFile
-                  ? <p className="text-xs text-slate-700">{cvFile.name}</p>
-                  : <p className="text-xs text-slate-400">Klik untuk upload CV</p>
-                }
+
+            {inputType === 'form' ? (
+              <div>
+                <label style={labelStyle}>Skill yang Kamu Punya</label>
+                <textarea rows={4} placeholder="Ceritakan skill dan pengalaman kamu..."
+                  value={form.self_described_skills} onChange={e => setForm({ ...form, self_described_skills: e.target.value })}
+                  style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }} />
               </div>
-              <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={e => setCvFile(e.target.files[0])} />
+            ) : (
+              <div>
+                <label style={labelStyle}>Upload CV (PDF)</label>
+                <div onClick={() => fileRef.current.click()} style={{
+                  border: `2px dashed ${cvFile ? '#10b981' : '#cbd5e1'}`, borderRadius: '10px',
+                  padding: '20px 12px', textAlign: 'center', cursor: 'pointer',
+                  background: cvFile ? '#f0fdf4' : '#f8fafc', transition: 'all 0.2s'
+                }}>
+                  {cvFile ? (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 6px', display: 'block' }}>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <p style={{ fontSize: '12px', color: '#059669', fontWeight: 600, margin: '0 0 2px' }}>{cvFile.name}</p>
+                      <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0 }}>Klik untuk ganti</p>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 6px', display: 'block' }}>
+                        <polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" />
+                        <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" />
+                      </svg>
+                      <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 2px' }}>Klik untuk upload CV</p>
+                      <p style={{ fontSize: '11px', color: '#cbd5e1', margin: 0 }}>PDF only</p>
+                    </>
+                  )}
+                </div>
+                <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => setCvFile(e.target.files[0])} />
+              </div>
+            )}
+          </div>
+
+          {/* Job Description */}
+          <div>
+            <label style={labelStyle}>Job Description <span style={{ fontWeight: 400, color: '#cbd5e1', fontSize: '10px', textTransform: 'none', letterSpacing: 0 }}>(opsional)</span></label>
+            <textarea rows={3} placeholder="Paste job description dari lowongan yang dituju..."
+              value={jobDesc} onChange={e => setJobDesc(e.target.value)}
+              style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }} />
+            <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>Jika diisi, analisis lebih spesifik</p>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 12px' }}>
+              <p style={{ color: '#dc2626', fontSize: '12px', margin: 0 }}>{error}</p>
             </div>
           )}
 
-          {/* Job Desc */}
-          <div>
-            <label className="text-xs font-medium text-slate-700 mb-1.5 block">
-              Job Description <span className="text-slate-500">(opsional)</span>
-            </label>
-            <textarea
-              rows={3}
-              placeholder="Paste job description..."
-              value={jobDesc}
-              onChange={e => setJobDesc(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-gray-300 transition-all resize-none"
-            />
-          </div>
-
-          {error && <p className="text-red-400 text-xs">{error}</p>}
-
-          <button
-            onClick={result ? handleReset : handleSubmit}
-            disabled={isLoading}
-            className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2 bg-white text-black hover:bg-white/90"
-          >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                </svg>
-                Menganalisis...
-              </>
-            ) : result ? 'Analisis Ulang' : 'Analisis Sekarang'}
+          {/* Submit button */}
+          <button onClick={result ? handleReset : handleSubmit} disabled={isLoading} style={{
+            width: '100%', padding: '13px 0', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
+            border: result ? '1.5px solid #e2e8f0' : 'none',
+            background: result ? '#f8fafc' : 'linear-gradient(135deg,#3b82f6,#06b6d4)',
+            color: result ? '#64748b' : '#fff', cursor: isLoading ? 'not-allowed' : 'pointer',
+            opacity: isLoading ? 0.7 : 1, transition: 'all 0.2s',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            boxShadow: result ? 'none' : '0 4px 16px rgba(59,130,246,0.25)', letterSpacing: '0.01em'
+          }}>
+            {isLoading
+              ? <><span style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Menganalisis...</>
+              : result ? 'Perbarui Analisis' : 'Mulai Analisis'
+            }
           </button>
-        </div>
+        </aside>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+        {/* ── MAIN CONTENT */}
+        <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', minWidth: 0 }}>
           {!result ? (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-white border border-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            <div style={{ height: '100%', minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', maxWidth: '340px', padding: '0 16px' }}>
+                <div style={{ width: '64px', height: '64px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                   </svg>
                 </div>
-                <p className="text-slate-500 text-sm">Isi form di sebelah kiri untuk memulai analisis</p>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px' }}>Siap untuk Analisis?</h3>
+                <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.7, margin: '0 0 20px' }}>
+                  Isi form di sidebar untuk memulai analisis karir berbasis AI dan dapatkan roadmap personal kamu.
+                </p>
+                <button className="mobile-cta" onClick={() => setDrawerOpen(true)} style={{
+                  display: 'none', background: 'linear-gradient(135deg,#3b82f6,#06b6d4)',
+                  color: '#fff', border: 'none', padding: '12px 28px', borderRadius: '10px',
+                  fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 16px rgba(59,130,246,0.3)'
+                }}>Mulai Analisis</button>
               </div>
             </div>
           ) : (
-            <div className="space-y-4 max-w-3xl">
+            <div style={{ maxWidth: '860px' }}>
 
-              {/* Match Score */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-sm text-slate-900">Match Score</h3>
-                    <p className="text-slate-500 text-xs mt-0.5">{gap.matched_skills.length} dari {gap.total_required} skill terpenuhi</p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-3xl font-bold ${
-                      gap.match_score >= 60 ? 'text-green-500' :
-                      gap.match_score >= 30 ? 'text-yellow-500' : 'text-red-500'
-                    }`}>{gap.match_score}%</p>
-                    <p className={`text-xs font-medium ${
-                      gap.match_score >= 60 ? 'text-green-500/70' :
-                      gap.match_score >= 30 ? 'text-yellow-500/70' : 'text-red-500/70'
-                    }`}>
-                      {gap.match_score >= 60 ? 'SIAP APPLY' : gap.match_score >= 30 ? 'PERLU LATIHAN' : 'KESENJANGAN TINGGI'}
+              {/* ── ANALISIS */}
+              <section id="analisis">
+                {/* Hero */}
+                <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'stretch' }}>
+                  <div style={cardStyle}>
+                    <div style={{ marginBottom: '10px' }}>
+                      {gap.match_score >= 60
+                        ? <span style={mkBadge('#059669','#d1fae5','#a7f3d0')}>Siap Apply</span>
+                        : gap.match_score >= 30
+                        ? <span style={mkBadge('#d97706','#fef3c7','#fde68a')}>Perlu Latihan Intensif</span>
+                        : <span style={mkBadge('#dc2626','#fee2e2','#fca5a5')}>Kesenjangan Tinggi</span>
+                      }
+                    </div>
+                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', margin: '0 0 10px', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{finalRole}</h1>
+                    <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.7, margin: 0 }}>
+                      Analisis menunjukkan Anda menguasai <strong style={{ color: '#1e293b' }}>{gap.matched_skills.length} dari {gap.total_required} skill</strong> utama.
                     </p>
                   </div>
+                  <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '16px 20px', minWidth: '130px' }}>
+                    <div style={{ position: 'relative', width: '88px', height: '88px' }}>
+                      <svg width="88" height="88" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#e2e8f0" strokeWidth="10" />
+                        <circle cx="60" cy="60" r="52" fill="none"
+                          stroke={gap.match_score >= 60 ? '#10b981' : gap.match_score >= 30 ? '#f59e0b' : '#ef4444'}
+                          strokeWidth="10" strokeDasharray={`${gap.match_score * 3.267} 326.7`} strokeLinecap="round" />
+                      </svg>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontSize: '19px', fontWeight: 800, color: '#0f172a' }}>{gap.match_score}%</span>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Matching Rate</p>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all duration-700 ${
-                      gap.match_score >= 60 ? 'bg-green-500' :
-                      gap.match_score >= 30 ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}
-                    style={{ width: `${gap.match_score}%` }}
-                  />
+
+                {/* Skills */}
+                <div className="skills-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ ...cardStyle, borderColor: '#a7f3d0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Skill Dikuasai</span>
+                      <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: '#059669' }}>{gap.matched_skills.length} skill</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {gap.matched_skills.length > 0
+                        ? gap.matched_skills.map(s => <span key={s} style={mkSkillBadge('#059669','#d1fae5','#a7f3d0')}>{s}</span>)
+                        : <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Belum ada yang match</p>}
+                    </div>
+                  </div>
+                  <div style={{ ...cardStyle, borderColor: '#fca5a5' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Gap Kompetensi</span>
+                      <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>{gap.missing_skills.length} skill</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {gap.missing_skills.length > 0
+                        ? gap.missing_skills.map(s => <span key={s} style={mkSkillBadge('#dc2626','#fee2e2','#fca5a5')}>{s}</span>)
+                        : <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Semua skill sudah dimiliki!</p>}
+                    </div>
+                  </div>
                 </div>
-                {gap.source === 'job_description' && (
-                  <p className="text-xs text-blue-500/70 mt-2">Berdasarkan job description yang kamu paste</p>
+
+                {/* Background strength */}
+                {roadmap?.background_strength && (
+                  <div style={{ ...cardStyle, borderLeft: '3px solid #93c5fd', background: '#f0f7ff', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                        <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                      </svg>
+                      <div>
+                        <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 5px' }}>Kekuatan Background Anda</h3>
+                        <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.7, margin: 0 }}>{roadmap.background_strength}</p>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </div>
+              </section>
 
-              {/* Skills */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-5 h-5 rounded-full bg-green-400/20 flex items-center justify-center">
-                      <svg className="w-3 h-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <h3 className="text-sm font-medium text-slate-900">Skill yang dikuasai</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {gap.matched_skills.length > 0 ? gap.matched_skills.map(s => (
-                      <span key={s} className="bg-green-400/10 text-green-400 text-xs px-2.5 py-1 rounded-full border border-green-400/20">
-                        {s}
-                      </span>
-                    )) : <p className="text-xs text-slate-400">Belum ada yang match</p>}
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-5 h-5 rounded-full bg-orange-400/20 flex items-center justify-center">
-                      <svg className="w-3 h-3 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-sm font-medium text-slate-900">Skill perlu dikembangkan</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {gap.missing_skills.map(s => (
-                      <span key={s} className="bg-orange-400/10 text-orange-400 text-xs px-2.5 py-1 rounded-full border border-orange-400/20">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Transferable Skills */}
-              {gap.transferable_skills && gap.transferable_skills.length > 0 && (
-                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
-                  <h3 className="text-sm font-medium text-amber-900 mb-3">Transferable Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {gap.transferable_skills.map((t, i) => (
-                      <span key={i} className="bg-amber-400/10 text-amber-400 text-xs px-2.5 py-1 rounded-full border border-amber-400/20">
-                        {t.skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Background Strength */}
-              {roadmap?.background_strength && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm text-slate-900">✦</span>
-                    <h3 className="text-sm font-semibold text-slate-900">Ringkasan Kekuatan</h3>
-                  </div>
-                  <p className="text-slate-500 text-sm leading-relaxed">{roadmap.background_strength}</p>
-                </div>
-              )}
-
-              {/* Roadmap */}
+              {/* ── ROADMAP */}
               {roadmap?.weekly_plan && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                  <h3 className="text-sm font-semibold mb-5 text-slate-900">Roadmap Belajar</h3>
-                  <div className="space-y-5">
+                <section id="roadmap" style={{ marginTop: '40px' }}>
+                  <div style={{ marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Roadmap Belajar</h2>
+                    {roadmap.estimated_duration && (
+                      <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px', background: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd', display: 'inline-block', marginBottom: '6px' }}>
+                        {roadmap.estimated_duration}
+                      </span>
+                    )}
+                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                      Langkah strategis menuju {finalRole} Profesional
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {roadmap.weekly_plan.map((week, i) => (
-                      <div key={i} className="flex gap-4">
-                        <div className="flex flex-col items-center">
-                          <div className="w-7 h-7 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center font-bold flex-shrink-0">
-                            {String(i + 1).padStart(2, '0')}
-                          </div>
-                          {i < roadmap.weekly_plan.length - 1 && (
-                            <div className="w-px bg-gray-200 flex-1 mt-2" />
-                          )}
+                      <div key={i} style={{ ...cardStyle, display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                        {/* Step number */}
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg,#3b82f6,#06b6d4)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '13px', flexShrink: 0, boxShadow: '0 2px 8px rgba(59,130,246,0.3)' }}>
+                          {String(i + 1).padStart(2, '0')}
                         </div>
-                        <div className="flex-1 pb-4">
-                          <p className="text-xs text-slate-400 uppercase tracking-wide mb-1">{week.week}</p>
-                          <p className="font-semibold text-sm text-slate-900">{week.focus}</p>
-                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">{week.action}</p>
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {week.skills?.map(s => (
-                              <span key={s} className="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full border border-gray-200">
-                                {s}
-                              </span>
-                            ))}
-                          </div>
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 2px' }}>{week.week}</p>
+                          <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>{week.focus}</h3>
+                          <p style={{ fontSize: '12px', color: '#64748b', lineHeight: 1.65, margin: '0 0 10px' }}>{week.action}</p>
+
+                          {/* Skill tags */}
+                          {week.skills?.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '12px' }}>
+                              {week.skills.map(s => (
+                                <span key={s} style={{ fontSize: '11px', fontWeight: 500, padding: '3px 9px', borderRadius: '6px', background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' }}>{s}</span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Resource links per skill */}
+                          {week.skills?.some(s => roadmap.skill_resources?.[s]) && (
+                            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <p style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Belajar dari</p>
+                              {week.skills.map(s => {
+                                const res = roadmap.skill_resources?.[s]
+                                if (!res) return null
+
+                                if (res.type === 'course') {
+                                  return res.items?.map((c, j) => (
+                                    <a key={`${s}-${j}`} href={c.url} target="_blank" rel="noreferrer" style={{
+                                      display: 'inline-flex', alignItems: 'center', gap: '7px',
+                                      color: '#3b82f6', textDecoration: 'none', fontSize: '12px', fontWeight: 500
+                                    }}>
+                                      <span style={{ width: '20px', height: '20px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                      </span>
+                                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
+                                      {c.price === 'free' && <span style={{ color: '#10b981', fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>Gratis</span>}
+                                    </a>
+                                  ))
+                                }
+
+                                // YouTube + Google/article links
+                                return (
+                                  <div key={s} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {res.youtube && (
+                                      <a href={res.youtube} target="_blank" rel="noreferrer" style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                        fontSize: '11px', fontWeight: 600, color: '#fff', textDecoration: 'none',
+                                        background: '#ef4444', padding: '4px 10px', borderRadius: '6px'
+                                      }}>
+                                        <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        YouTube: {s}
+                                      </a>
+                                    )}
+                                    {res.google && (
+                                      <a href={res.google} target="_blank" rel="noreferrer" style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                        fontSize: '11px', fontWeight: 600, color: '#475569', textDecoration: 'none',
+                                        background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '4px 10px', borderRadius: '6px'
+                                      }}>
+                                        <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        Artikel: {s}
+                                      </a>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
+
+
+                  {/* Recommended courses */}
+                  {roadmap?.recommended_courses && (
+                    <div style={{ marginTop: '32px' }}>
+                      <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: '0 0 14px' }}>Kursus Direkomendasikan</h2>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {roadmap.recommended_courses.map((course, i) => (
+                          <a key={i} href={course.url} target="_blank" rel="noreferrer" style={{
+                            ...cardStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '13px 16px', textDecoration: 'none', transition: 'border-color 0.2s, box-shadow 0.2s', gap: '10px'
+                          }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#93c5fd'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(59,130,246,0.1)' }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                              <div style={{ width: '34px', height: '34px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" />
+                                </svg>
+                              </div>
+                              <div style={{ minWidth: 0 }}>
+                                <p style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{course.title}</p>
+                                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '2px 0 0' }}>{course.platform}</p>
+                              </div>
+                            </div>
+                            <span style={{
+                              fontSize: '10px', fontWeight: 700, padding: '4px 9px', borderRadius: '6px', flexShrink: 0, whiteSpace: 'nowrap',
+                              ...(course.priority === 'high'
+                                ? { background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }
+                                : { background: '#f1f5f9', color: '#94a3b8', border: '1px solid #e2e8f0' })
+                            }}>{course.priority === 'high' ? 'PRIORITAS' : 'OPSIONAL'}</span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
               )}
 
-              {/* Courses */}
-              {roadmap?.recommended_courses && (
-                <div className="bg-white border border-gray-200 rounded-2xl p-5">
-                  <h3 className="text-sm font-semibold mb-4 text-slate-900">Kursus Direkomendasikan</h3>
-                  <div className="space-y-3">
-                    {roadmap.recommended_courses.map((course, i) => (
-                      <a
-                        key={i}
-                        href={course.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all group"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-slate-900 group-hover:text-slate-900 transition-colors">{course.title}</p>
-                            <p className="text-xs text-slate-500 mt-0.5">{course.platform}</p>
-                          </div>
-                        </div>
-                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${
-                          course.priority === 'high'
-                            ? 'bg-red-400/10 text-red-400 border border-red-400/20'
-                            : 'bg-slate-100 text-slate-500 border border-gray-200'
-                        }`}>
-                          {course.priority === 'high' ? 'PRIORITAS' : 'OPSIONAL'}
-                        </span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
+              {/* Footer */}
+              <footer style={{ marginTop: '48px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
+                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 6px' }}>© 2026 ARAH — Naimatul Ulumiyah. All rights reserved.</p>
+                <a href="https://linkedin.com" target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#3b82f6', textDecoration: 'none' }}>
+                  Mari bekerjasama di LinkedIn: Naimatul Ulumiyah →
+                </a>
+              </footer>
             </div>
           )}
-        </div>
+        </main>
       </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter',-apple-system,sans-serif !important; background: #f5f6fa !important; }
+        select { cursor: pointer; font-family: inherit; }
+        select option { background: #fff; color: #1e293b; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        input::placeholder, textarea::placeholder { color: #cbd5e1; }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: #93c5fd !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        a { -webkit-tap-highlight-color: transparent; }
+
+        @media (max-width: 768px) {
+          .hamburger { display: flex !important; }
+          .backdrop { display: block !important; }
+          .mobile-cta { display: block !important; }
+
+          .sidebar {
+            position: fixed !important;
+            top: 56px !important; left: 0 !important;
+            width: 85% !important; max-width: 320px !important;
+            min-width: unset !important;
+            height: calc(100vh - 56px) !important;
+            max-height: calc(100vh - 56px) !important;
+            transform: translateX(-100%);
+            transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+            z-index: 45;
+            border-right: none !important;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+          }
+          .sidebar.open { transform: translateX(0); }
+
+          main { padding: 16px 14px !important; }
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .skills-grid { grid-template-columns: 1fr !important; }
+        }
+
+        @media (max-width: 480px) {
+          main { padding: 12px 10px !important; }
+          h1 { font-size: 22px !important; }
+          h2 { font-size: 17px !important; }
+        }
+      `}</style>
     </div>
   )
 }
