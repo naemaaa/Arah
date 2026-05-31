@@ -2,6 +2,17 @@ import { useState, useRef } from 'react'
 import { analyzeFromForm, uploadCV, analyzeFromCV } from '../services/api'
 import logo from '../assets/arah-logo.png'
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
+async function analyzeCV(cvData) {
+  const response = await fetch(`${apiUrl}/api/analyze/cv`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cvData),
+  });
+  return response.json();
+}
+
 const ROLES = [
   "Data Analyst", "Data Scientist", "Backend Developer",
   "Frontend Developer", "Mobile Developer", "Product Manager",

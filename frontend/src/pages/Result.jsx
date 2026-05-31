@@ -1,7 +1,16 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useArahStore from '../store/useArahStore'
+const apiUrl = import.meta.env.VITE_API_URL;
 
+async function analyzeCV(cvData) {
+  const response = await fetch(`${apiUrl}/api/analyze/cv`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cvData),
+  });
+  return response.json();
+}
 export default function Result() {
   const navigate = useNavigate()
   const { result, userInput, reset } = useArahStore()
