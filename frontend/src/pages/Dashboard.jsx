@@ -408,19 +408,77 @@ export default function Dashboard() {
                         </div>
                       </div>
                       
-                      <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '24px', minWidth: '160px', borderRadius: '20px' }}>
-                        <div style={{ position: 'relative', width: '96px', height: '96px' }}>
-                          <svg width="96" height="96" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
-                            <circle cx="60" cy="60" r="52" fill="none" stroke="#e2e8f0" strokeWidth="10" />
-                            <circle cx="60" cy="60" r="52" fill="none"
-                              stroke={gap.match_score >= 60 ? '#2563eb' : gap.match_score >= 30 ? '#4f46e5' : '#64748b'}
-                              strokeWidth="10" strokeDasharray={`${gap.match_score * 3.267} 326.7`} strokeLinecap="round" />
+                      <div style={{ 
+                        ...cardStyle, 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        gap: '12px', 
+                        padding: '24px', 
+                        minWidth: '170px', 
+                        borderRadius: '20px',
+                        background: 'linear-gradient(145deg, #ffffff, #f8fafc)',
+                        boxShadow: '0 10px 20px -5px rgba(37, 99, 235, 0.03), 0 4px 6px -2px rgba(0, 0, 0, 0.02)'
+                      }}>
+                        <div style={{ position: 'relative', width: '100px', height: '100px' }}>
+                          <svg width="100" height="100" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)', overflow: 'visible' }}>
+                            <defs>
+                              {/* High Score Gradient (Blue -> Purple/Violet) */}
+                              <linearGradient id="highGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#2563eb" />
+                                <stop offset="100%" stopColor="#7c3aed" />
+                              </linearGradient>
+                              {/* Medium Score Gradient (Indigo -> Rose) */}
+                              <linearGradient id="midGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#4f46e5" />
+                                <stop offset="100%" stopColor="#ec4899" />
+                              </linearGradient>
+                              {/* Low Score Gradient (Slate -> Cool Gray) */}
+                              <linearGradient id="lowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#475569" />
+                                <stop offset="100%" stopColor="#64748b" />
+                              </linearGradient>
+                            </defs>
+                            {/* Gray Background Track */}
+                            <circle cx="60" cy="60" r="52" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+                            
+                            {/* Glowing Neon Underlayer (if score > 0) */}
+                            {gap.match_score > 0 && (
+                              <circle 
+                                cx="60" 
+                                cy="60" 
+                                r="52" 
+                                fill="none"
+                                stroke={gap.match_score >= 60 ? '#3b82f6' : gap.match_score >= 30 ? '#4f46e5' : '#64748b'}
+                                strokeWidth="12" 
+                                strokeDasharray={`${gap.match_score * 3.267} 326.7`} 
+                                strokeLinecap="round"
+                                style={{ opacity: 0.3, filter: 'blur(4px)' }} 
+                              />
+                            )}
+
+                            {/* Main Colored Foreground Progress */}
+                            <circle 
+                              cx="60" 
+                              cy="60" 
+                              r="52" 
+                              fill="none"
+                              stroke={gap.match_score >= 60 ? 'url(#highGrad)' : gap.match_score >= 30 ? 'url(#midGrad)' : 'url(#lowGrad)'}
+                              strokeWidth="10" 
+                              strokeDasharray={`${gap.match_score * 3.267} 326.7`} 
+                              strokeLinecap="round" 
+                            />
                           </svg>
                           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>{gap.match_score}%</span>
+                            <span style={{ 
+                              fontSize: '22px', 
+                              fontWeight: 800, 
+                              color: gap.match_score >= 60 ? '#1d4ed8' : gap.match_score >= 30 ? '#4338ca' : '#334155' 
+                            }}>{gap.match_score}%</span>
                           </div>
                         </div>
-                        <p style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Matching Rate</p>
+                        <p style={{ fontSize: '10px', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Matching Rate</p>
                       </div>
                     </div>
 
