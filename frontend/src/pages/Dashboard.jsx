@@ -424,20 +424,20 @@ export default function Dashboard() {
                         <div style={{ position: 'relative', width: '100px', height: '100px' }}>
                           <svg width="100" height="100" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)', overflow: 'visible' }}>
                             <defs>
-                              {/* High Score Gradient (Blue -> Purple/Violet) */}
+                              {/* High Score Gradient (Royal Blue -> Purple) */}
                               <linearGradient id="highGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" stopColor="#2563eb" />
                                 <stop offset="100%" stopColor="#7c3aed" />
                               </linearGradient>
-                              {/* Medium Score Gradient (Indigo -> Rose) */}
+                              {/* Medium Score Gradient (Blue -> Indigo) */}
                               <linearGradient id="midGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#4f46e5" />
-                                <stop offset="100%" stopColor="#ec4899" />
+                                <stop offset="0%" stopColor="#3b82f6" />
+                                <stop offset="100%" stopColor="#6366f1" />
                               </linearGradient>
-                              {/* Low Score Gradient (Slate -> Cool Gray) */}
+                              {/* Low Score Gradient (Indigo -> Sky Blue) */}
                               <linearGradient id="lowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#475569" />
-                                <stop offset="100%" stopColor="#64748b" />
+                                <stop offset="0%" stopColor="#4f46e5" />
+                                <stop offset="100%" stopColor="#60a5fa" />
                               </linearGradient>
                             </defs>
                             {/* Gray Background Track */}
@@ -450,7 +450,7 @@ export default function Dashboard() {
                                 cy="60" 
                                 r="52" 
                                 fill="none"
-                                stroke={gap.match_score >= 60 ? '#3b82f6' : gap.match_score >= 30 ? '#4f46e5' : '#64748b'}
+                                stroke={gap.match_score >= 60 ? '#2563eb' : gap.match_score >= 30 ? '#3b82f6' : '#4f46e5'}
                                 strokeWidth="12" 
                                 strokeDasharray={`${gap.match_score * 3.267} 326.7`} 
                                 strokeLinecap="round"
