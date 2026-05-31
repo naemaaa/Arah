@@ -434,10 +434,10 @@ export default function Dashboard() {
                                 <stop offset="0%" stopColor="#3b82f6" />
                                 <stop offset="100%" stopColor="#6366f1" />
                               </linearGradient>
-                              {/* Low Score Gradient (Indigo -> Sky Blue) */}
+                              {/* Low Score Gradient (Coral -> Crimson) */}
                               <linearGradient id="lowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#4f46e5" />
-                                <stop offset="100%" stopColor="#60a5fa" />
+                                <stop offset="0%" stopColor="#f43f5e" />
+                                <stop offset="100%" stopColor="#be123c" />
                               </linearGradient>
                             </defs>
                             {/* Gray Background Track */}
@@ -450,7 +450,7 @@ export default function Dashboard() {
                                 cy="60" 
                                 r="52" 
                                 fill="none"
-                                stroke={gap.match_score >= 60 ? '#2563eb' : gap.match_score >= 30 ? '#3b82f6' : '#4f46e5'}
+                                stroke={gap.match_score >= 60 ? '#2563eb' : gap.match_score >= 30 ? '#3b82f6' : '#f43f5e'}
                                 strokeWidth="12" 
                                 strokeDasharray={`${gap.match_score * 3.267} 326.7`} 
                                 strokeLinecap="round"
@@ -474,7 +474,7 @@ export default function Dashboard() {
                             <span style={{ 
                               fontSize: '22px', 
                               fontWeight: 800, 
-                              color: gap.match_score >= 60 ? '#1d4ed8' : gap.match_score >= 30 ? '#4338ca' : '#334155' 
+                              color: gap.match_score >= 60 ? '#1d4ed8' : gap.match_score >= 30 ? '#4338ca' : '#be123c' 
                             }}>{gap.match_score}%</span>
                           </div>
                         </div>
