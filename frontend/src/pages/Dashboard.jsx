@@ -719,7 +719,7 @@ export default function Dashboard() {
               <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
                 <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '0 0 12px', letterSpacing: '-0.02em' }}>Tentang ARAH Platform</h2>
                 <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.7, margin: '0 0 16px' }}>
-                  <strong>ARAH</strong> adalah platform navigasi karir berbasis kecerdasan buatan (AI) yang dirancang untuk membantu mahasiswa, lulusan baru, maupun profesional yang ingin berpindah karir (*career switcher*). 
+                  <strong>ARAH</strong> adalah platform navigasi karir berbasis kecerdasan buatan (AI) yang dirancang untuk membantu mahasiswa, lulusan baru, maupun profesional yang ingin berpindah karir (career switcher). 
                 </p>
                 <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.7, margin: '0 0 24px' }}>
                   Platform ini mengevaluasi kesenjangan antara keahlian yang Anda miliki saat ini (baik yang diisi secara manual maupun diekstrak langsung dari file CV PDF Anda) dengan target karir yang dituju. AI kemudian memformulasikan peta jalan belajar (learning roadmap) bertahap yang dilengkapi dengan modul mingguan, fokus pembelajaran, serta rekomendasi sumber belajar gratis/terpilih (seperti YouTube, artikel, dan kursus platform) untuk membantu Anda mencapai impian karir tersebut.
@@ -729,6 +729,21 @@ export default function Dashboard() {
                 <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.6, margin: '0 0 6px' }}>
                   Platform ini dikembangkan oleh <strong>Naimatul Ulumiyah</strong>.
                 </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '8px 0 16px', fontSize: '13px', color: '#64748b' }}>
+                  <a href="https://linkedin.com/in/naimatululumiyah" target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2563eb', textDecoration: 'none', fontWeight: 500 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                    </svg>
+                    LinkedIn: Naimatul Ulumiyah
+                  </a>
+                  <a href="mailto:naemaaa89@gmail.com" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#2563eb', textDecoration: 'none', fontWeight: 500 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                      <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    Email: naemaaa89@gmail.com
+                  </a>
+                </div>
                 <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
                   Semua hak cipta dilindungi. © 2026 ARAH.
                 </p>
