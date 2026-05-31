@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { LayoutDashboard, Compass, Info, ArrowRight, Sparkles, Loader2, RefreshCw } from 'lucide-react'
 import { analyzeFromForm, uploadCV, analyzeFromCV } from '../services/api'
 import logo from '../assets/arah-logo.png'
 
@@ -65,6 +66,7 @@ export default function Dashboard() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState(null)
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [completedWeeks, setCompletedWeeks] = useState(() => {
     try {
       const saved = localStorage.getItem('arah_completed_weeks')
@@ -113,7 +115,7 @@ export default function Dashboard() {
     <div style={{ minHeight: '100vh', background: '#f5f6fa', color: '#1e293b', fontFamily: "'Inter',-apple-system,sans-serif", display: 'flex', flexDirection: 'column' }}>
 
       {/* ── NAVBAR */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: '#fff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: '56px', gap: '12px' }}>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: '#fff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: '64px', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="hamburger-toggle" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -122,19 +124,12 @@ export default function Dashboard() {
               <line x1="4" y1="18" x2="20" y2="18" />
             </svg>
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img src={logo} alt="Arah" style={{ width: '30px', height: '30px', objectFit: 'contain' }} />
-            <span style={{ fontWeight: 800, fontSize: '18px', color: '#2563eb', letterSpacing: '0.06em' }}>ARAH</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src={logo} alt="Arah" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />
+            <span style={{ fontWeight: 800, fontSize: '20px', color: '#2563eb', letterSpacing: '0.06em' }}>ARAH</span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {result && (
-            <div style={{ display: 'flex', gap: '16px' }}>
-              {['Analisis', 'Roadmap'].map(nav => (
-                <a key={nav} href={`#${nav.toLowerCase()}`} style={{ fontSize: '13px', fontWeight: 500, color: '#64748b', textDecoration: 'none' }}>{nav}</a>
-              ))}
-            </div>
-          )}
         </div>
       </nav>
 
@@ -143,256 +138,345 @@ export default function Dashboard() {
 
         {/* Mobile backdrop */}
         {sidebarOpen && (
-          <div className="backdrop" onClick={() => setSidebarOpen(false)} style={{ display: 'none', position: 'fixed', inset: 0, top: '56px', background: 'rgba(0,0,0,0.3)', zIndex: 40 }} />
+          <div className="backdrop" onClick={() => setSidebarOpen(false)} style={{ display: 'none', position: 'fixed', inset: 0, top: '64px', background: 'rgba(15, 23, 42, 0.3)', backdropFilter: 'blur(4px)', zIndex: 40 }} />
         )}
 
-        {/* ── SIDEBAR — content INLINED (no sub-component to avoid remount on state change) */}
+        {/* ── SIDEBAR ── */}
         <aside className={sidebarOpen ? 'sidebar open' : 'sidebar collapsed'}>
-          {/* Title */}
-          <div>
-            <h2 style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a', margin: 0 }}>Kustomisasi Analisis</h2>
-            <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '3px', margin: '3px 0 0' }}>Sesuaikan profil untuk hasil presisi</p>
-          </div>
-
-          {/* Target Karir */}
-          <div>
-            <label style={labelStyle}>Target Karir</label>
-            <select value={form.target_role} onChange={e => setForm({ ...form, target_role: e.target.value })} style={inputStyle}>
-              <option value="">Pilih role...</option>
-              {Object.entries(ROLE_GROUPS).map(([groupName, roles]) => (
-                <optgroup key={groupName} label={groupName}>
-                  {roles.map(r => <option key={r} value={r}>{r}</option>)}
-                </optgroup>
-              ))}
-              <option value="lainnya">Lainnya (Kustom)...</option>
-            </select>
-            {form.target_role === 'lainnya' && (
-              <input type="text" placeholder="Contoh: Prompt Engineer" value={customRole}
-                onChange={e => setCustomRole(e.target.value)} style={{ ...inputStyle, marginTop: '6px' }} />
-            )}
-          </div>
-
-          {/* Level */}
-          <div>
-            <label style={labelStyle}>Level Karir</label>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {LEVELS.map(l => (
-                <button key={l} onClick={() => setForm({ ...form, level: l })} style={{
-                  flex: 1, padding: '8px 0', borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-                  border: form.level === l ? '1.5px solid #2563eb' : '1.5px solid #e2e8f0',
-                  background: form.level === l ? 'linear-gradient(135deg,#2563eb,#4f46e5)' : '#f8fafc',
-                  color: form.level === l ? '#fff' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', textTransform: 'capitalize'
-                }}>{l.charAt(0).toUpperCase() + l.slice(1)}</button>
-              ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px 0' }}>
+            <div style={{ padding: '0 12px', marginBottom: '8px' }}>
+              <p style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Menu Utama</p>
             </div>
+            {[
+              { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+              { id: 'roadmap', name: 'Roadmap Belajar', icon: Compass },
+              { id: 'about', name: 'Tentang ARAH', icon: Info }
+            ].map(item => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id)
+                    if (window.innerWidth <= 768) {
+                      setSidebarOpen(false)
+                    }
+                  }}
+                  className={`nav-button ${isActive ? 'active' : ''}`}
+                >
+                  <Icon size={18} className="nav-icon" />
+                  <span className="nav-text">{item.name}</span>
+                </button>
+              )
+            })}
           </div>
+        </aside>
 
-          {/* Jurusan */}
-          <div>
-            <label style={labelStyle}>Jurusan</label>
-            <input type="text" placeholder="Contoh: Sistem Informasi" value={form.major}
-              onChange={e => setForm({ ...form, major: e.target.value })} style={inputStyle} />
-          </div>
-
-          {/* Toggle Manual / CV */}
-          <div>
-            <div style={{ display: 'flex', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '3px', gap: '3px', marginBottom: '12px' }}>
-              {[['form', 'Isi Manual'], ['cv', 'Upload CV']].map(([t, lbl]) => (
-                <button key={t} onClick={() => setInputType(t)} style={{
-                  flex: 1, padding: '7px 0', borderRadius: '6px', fontSize: '12px', fontWeight: 600, border: 'none',
-                  background: inputType === t ? 'linear-gradient(135deg,#2563eb,#4f46e5)' : 'transparent',
-                  color: inputType === t ? '#fff' : '#94a3b8', cursor: 'pointer', transition: 'all 0.2s'
-                }}>{lbl}</button>
-              ))}
-            </div>
-
-            {inputType === 'form' ? (
-              <div>
-                <label style={labelStyle}>Skill yang Kamu Punya</label>
-                <textarea rows={4} placeholder="Ceritakan skill dan pengalaman kamu..."
-                  value={form.self_described_skills} onChange={e => setForm({ ...form, self_described_skills: e.target.value })}
-                  style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }} />
-              </div>
-            ) : (
-              <div>
-                <label style={labelStyle}>Upload CV (PDF)</label>
-                <div onClick={() => fileRef.current.click()} style={{
-                  border: `2px dashed ${cvFile ? '#3b82f6' : '#cbd5e1'}`, borderRadius: '10px',
-                  padding: '20px 12px', textAlign: 'center', cursor: 'pointer',
-                  background: cvFile ? '#eff6ff' : '#f8fafc', transition: 'all 0.2s'
-                }}>
-                  {cvFile ? (
-                    <>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 6px', display: 'block' }}>
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      <p style={{ fontSize: '12px', color: '#1d4ed8', fontWeight: 600, margin: '0 0 2px' }}>{cvFile.name}</p>
-                      <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Klik untuk ganti</p>
-                    </>
-                  ) : (
-                    <>
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 6px', display: 'block' }}>
-                        <polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" />
-                        <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" />
-                      </svg>
-                      <p style={{ fontSize: '12px', color: '#94a3b8', margin: '0 0 2px' }}>Klik untuk upload CV</p>
-                      <p style={{ fontSize: '11px', color: '#cbd5e1', margin: 0 }}>PDF only</p>
-                    </>
-                  )}
+        <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          {activeTab === 'dashboard' && (
+            <div style={{ maxWidth: '860px', margin: '0 auto' }}>
+              {/* Hero Banner */}
+              <div style={{
+                background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
+                color: '#fff',
+                padding: '28px 24px',
+                borderRadius: '20px',
+                marginBottom: '24px',
+                boxShadow: '0 4px 20px rgba(37,99,235,0.15)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <span style={{ fontSize: '10px', fontWeight: 800, textTransform: 'uppercase', background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '20px', letterSpacing: '0.05em', display: 'inline-block', marginBottom: '8px' }}>AI Career Guide</span>
+                  <h1 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 6px', letterSpacing: '-0.02em' }}>Navigasi Karir & Peta Jalan Belajar</h1>
+                  <p style={{ fontSize: '13px', opacity: 0.9, lineHeight: 1.6, margin: 0, maxWidth: '600px' }}>
+                    Temukan kesenjangan keahlian Anda (Skill Gap) dengan target karir impian Anda, dan dapatkan roadmap belajar mingguan terpersonalisasi yang dirancang oleh AI.
+                  </p>
                 </div>
-                <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => setCvFile(e.target.files[0])} />
+                <div style={{ position: 'absolute', right: '-20px', bottom: '-20px', fontSize: '120px', opacity: 0.08, fontWeight: 900, userSelect: 'none' }}>ARAH</div>
               </div>
-            )}
-          </div>
 
-          {/* Job Description */}
-          <div>
-            <label style={labelStyle}>Job Description <span style={{ fontWeight: 400, color: '#cbd5e1', fontSize: '10px', textTransform: 'none', letterSpacing: 0 }}>(opsional)</span></label>
-            <textarea rows={3} placeholder="Paste job description dari lowongan yang dituju..."
-              value={jobDesc} onChange={e => setJobDesc(e.target.value)}
-              style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }} />
-            <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>Jika diisi, analisis lebih spesifik</p>
-          </div>
+              {!result ? (
+                /* SETUP WIZARD (Form Kustomisasi) */
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '28px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px', marginBottom: '24px' }}>
+                    <div style={{ width: '40px', height: '40px', background: '#eff6ff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🚀</div>
+                    <div>
+                      <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Siapkan Profil Karir Anda</h2>
+                      <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>Lengkapi data di bawah ini untuk memulai analisis berbasis AI.</p>
+                    </div>
+                  </div>
 
-          {/* Error */}
-          {error && (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 12px' }}>
-              <p style={{ color: '#dc2626', fontSize: '12px', margin: 0 }}>{error}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 768 ? '1fr 1fr' : '1fr', gap: '24px', marginBottom: '24px' }}>
+                    
+                    {/* Left Column */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                      {/* Target Karir */}
+                      <div>
+                        <label style={labelStyle}>Target Karir</label>
+                        <select value={form.target_role} onChange={e => setForm({ ...form, target_role: e.target.value })} style={inputStyle}>
+                          <option value="">Pilih role karir target...</option>
+                          {Object.entries(ROLE_GROUPS).map(([groupName, roles]) => (
+                            <optgroup key={groupName} label={groupName}>
+                              {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                            </optgroup>
+                          ))}
+                          <option value="lainnya">Lainnya (Kustom)...</option>
+                        </select>
+                        {form.target_role === 'lainnya' && (
+                          <input type="text" placeholder="Contoh: Prompt Engineer" value={customRole}
+                            onChange={e => setCustomRole(e.target.value)} style={{ ...inputStyle, marginTop: '8px' }} />
+                        )}
+                      </div>
+
+                      {/* Level */}
+                      <div>
+                        <label style={labelStyle}>Level Karir</label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          {LEVELS.map(l => (
+                            <button key={l} onClick={() => setForm({ ...form, level: l })} style={{
+                              flex: 1, padding: '10px 0', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
+                              border: form.level === l ? '1.5px solid #2563eb' : '1.5px solid #e2e8f0',
+                              background: form.level === l ? 'linear-gradient(135deg,#2563eb,#4f46e5)' : '#f8fafc',
+                              color: form.level === l ? '#fff' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', textTransform: 'capitalize'
+                            }}>{l.charAt(0).toUpperCase() + l.slice(1)}</button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Jurusan */}
+                      <div>
+                        <label style={labelStyle}>Jurusan / Latar Belakang</label>
+                        <input type="text" placeholder="Contoh: Sistem Informasi" value={form.major}
+                          onChange={e => setForm({ ...form, major: e.target.value })} style={inputStyle} />
+                      </div>
+                    </div>
+
+                    {/* Right Column */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                      {/* Toggle Manual / CV */}
+                      <div>
+                        <label style={labelStyle}>Metode Input Skill</label>
+                        <div style={{ display: 'flex', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '3px', gap: '3px', marginBottom: '12px' }}>
+                          {[['form', 'Isi Manual'], ['cv', 'Upload CV (PDF)']].map(([t, lbl]) => (
+                            <button key={t} onClick={() => setInputType(t)} style={{
+                              flex: 1, padding: '8px 0', borderRadius: '6px', fontSize: '12px', fontWeight: 700, border: 'none',
+                              background: inputType === t ? 'linear-gradient(135deg,#2563eb,#4f46e5)' : 'transparent',
+                              color: inputType === t ? '#fff' : '#94a3b8', cursor: 'pointer', transition: 'all 0.2s'
+                            }}>{lbl}</button>
+                          ))}
+                        </div>
+
+                        {inputType === 'form' ? (
+                          <div>
+                            <label style={labelStyle}>Skill yang Kamu Miliki</label>
+                            <textarea rows={4} placeholder="Jelaskan skill, tools, atau pengalaman belajar yang pernah kamu lalui..."
+                              value={form.self_described_skills} onChange={e => setForm({ ...form, self_described_skills: e.target.value })}
+                              style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }} />
+                          </div>
+                        ) : (
+                          <div>
+                            <label style={labelStyle}>Unggah CV (PDF)</label>
+                            <div onClick={() => fileRef.current.click()} style={{
+                              border: `2px dashed ${cvFile ? '#3b82f6' : '#cbd5e1'}`, borderRadius: '12px',
+                              padding: '24px 16px', textAlign: 'center', cursor: 'pointer',
+                              background: cvFile ? '#eff6ff' : '#f8fafc', transition: 'all 0.2s'
+                            }}>
+                              {cvFile ? (
+                                <>
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 8px', display: 'block' }}>
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                  <p style={{ fontSize: '13px', color: '#1d4ed8', fontWeight: 600, margin: '0 0 4px' }}>{cvFile.name}</p>
+                                  <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Klik untuk ganti file</p>
+                                </>
+                              ) : (
+                                <>
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 8px', display: 'block' }}>
+                                    <polyline points="16 16 12 12 8 16" /><line x1="12" y1="12" x2="12" y2="21" />
+                                    <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" />
+                                  </svg>
+                                  <p style={{ fontSize: '13px', color: '#64748b', margin: '0 0 4px', fontWeight: 600 }}>Klik untuk upload CV</p>
+                                  <p style={{ fontSize: '11px', color: '#cbd5e1', margin: 0 }}>Hanya format PDF</p>
+                                </>
+                              )}
+                            </div>
+                            <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => setCvFile(e.target.files[0])} />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Job Description */}
+                      <div>
+                        <label style={labelStyle}>Deskripsi Pekerjaan Sasaran <span style={{ fontWeight: 400, color: '#cbd5e1', fontSize: '10px', textTransform: 'none', letterSpacing: 0 }}>(opsional)</span></label>
+                        <textarea rows={3} placeholder="Tempel job description lowongan kerja agar analisis lebih terarah..."
+                          value={jobDesc} onChange={e => setJobDesc(e.target.value)}
+                          style={{ ...inputStyle, resize: 'none', lineHeight: 1.6 }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Error Message */}
+                  {error && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '12px 16px', marginBottom: '20px' }}>
+                      <p style={{ color: '#dc2626', fontSize: '13px', margin: 0, fontWeight: 500 }}>⚠️ {error}</p>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button onClick={handleSubmit} disabled={isLoading} style={{
+                    width: '100%', padding: '14px 0', borderRadius: '12px', fontSize: '14px', fontWeight: 700,
+                    border: 'none',
+                    background: 'linear-gradient(135deg,#2563eb,#4f46e5)',
+                    color: '#fff', cursor: isLoading ? 'not-allowed' : 'pointer',
+                    opacity: isLoading ? 0.8 : 1, transition: 'all 0.2s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    boxShadow: '0 4px 16px rgba(37,99,235,0.2)'
+                  }}>
+                    {isLoading ? (
+                      <><Loader2 size={16} className="animate-spin" />Menganalisis Profil Anda...</>
+                    ) : (
+                      <><Sparkles size={16} />Mulai Analisis Karir AI</>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                /* RESULTS OVERVIEW (Matching Rate & Skills) */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  
+                  {/* Analisis Hero & Matching Circle */}
+                  <section id="analisis">
+                    <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '16px', marginBottom: '16px', alignItems: 'stretch' }}>
+                      <div style={{ ...cardStyle, padding: '24px', borderRadius: '20px' }}>
+                        <div style={{ marginBottom: '12px' }}>
+                          {gap.match_score >= 60
+                            ? <span style={mkBadge('#1d4ed8','#eff6ff','#bfdbfe')}>Siap Apply</span>
+                            : gap.match_score >= 30
+                            ? <span style={mkBadge('#4f46e5','#f5f3ff','#ddd6fe')}>Perlu Latihan Intensif</span>
+                            : <span style={mkBadge('#475569','#f8fafc','#e2e8f0')}>Kesenjangan Tinggi</span>
+                          }
+                        </div>
+                        <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', margin: '0 0 10px', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{finalRole}</h1>
+                        <p style={{ fontSize: '14px', color: '#64748b', lineHeight: 1.7, margin: '0 0 20px' }}>
+                          Berdasarkan analisis AI, Anda menguasai <strong style={{ color: '#1e293b' }}>{gap.matched_skills.length} dari {gap.total_required} skill</strong> yang dibutuhkan untuk role ini.
+                        </p>
+                        
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                          <button onClick={() => setActiveTab('roadmap')} style={{
+                            padding: '10px 20px', borderRadius: '10px', border: 'none',
+                            background: '#2563eb', color: '#fff', fontSize: '13px', fontWeight: 700,
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+                            boxShadow: '0 4px 12px rgba(37,99,235,0.15)', transition: 'background 0.2s'
+                          }}>
+                            Buka Roadmap Belajar <ArrowRight size={14} />
+                          </button>
+                          <button onClick={handleReset} style={{
+                            padding: '10px 20px', borderRadius: '10px', border: '1.5px solid #e2e8f0',
+                            background: '#fff', color: '#64748b', fontSize: '13px', fontWeight: 600,
+                            cursor: 'pointer', transition: 'all 0.2s'
+                          }}>
+                            Analisis Ulang / Ganti Karir
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '24px', minWidth: '160px', borderRadius: '20px' }}>
+                        <div style={{ position: 'relative', width: '96px', height: '96px' }}>
+                          <svg width="96" height="96" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                            <circle cx="60" cy="60" r="52" fill="none" stroke="#e2e8f0" strokeWidth="10" />
+                            <circle cx="60" cy="60" r="52" fill="none"
+                              stroke={gap.match_score >= 60 ? '#2563eb' : gap.match_score >= 30 ? '#4f46e5' : '#64748b'}
+                              strokeWidth="10" strokeDasharray={`${gap.match_score * 3.267} 326.7`} strokeLinecap="round" />
+                          </svg>
+                          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>{gap.match_score}%</span>
+                          </div>
+                        </div>
+                        <p style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Matching Rate</p>
+                      </div>
+                    </div>
+
+                    {/* Skills Grid */}
+                    <div className="skills-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                      <div style={{ ...cardStyle, borderColor: '#bfdbfe', borderRadius: '16px', padding: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Skill Dikuasai</span>
+                          <span style={{ marginLeft: 'auto', fontSize: '12px', fontWeight: 700, color: '#2563eb', background: '#eff6ff', padding: '2px 8px', borderRadius: '20px' }}>{gap.matched_skills.length}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {gap.matched_skills.length > 0
+                            ? gap.matched_skills.map(s => <span key={s} style={mkSkillBadge('#1d4ed8','#eff6ff','#bfdbfe')}>{s}</span>)
+                            : <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Belum ada yang match</p>}
+                        </div>
+                      </div>
+
+                      <div style={{ ...cardStyle, borderColor: '#e2e8f0', borderRadius: '16px', padding: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Gap Kompetensi (Perlu Dipelajari)</span>
+                          <span style={{ marginLeft: 'auto', fontSize: '12px', fontWeight: 700, color: '#64748b', background: '#f1f5f9', padding: '2px 8px', borderRadius: '20px' }}>{gap.missing_skills.length}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {gap.missing_skills.length > 0
+                            ? gap.missing_skills.map(s => <span key={s} style={mkSkillBadge('#475569','#f1f5f9','#e2e8f0')}>{s}</span>)
+                            : <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Semua skill sudah dimiliki!</p>}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Background strength */}
+                    {roadmap?.background_strength && (
+                      <div style={{ ...cardStyle, borderLeft: '4px solid #3b82f6', background: '#eff6ff', marginBottom: '16px', borderRadius: '12px', padding: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                          <div style={{ fontSize: '20px' }}>💡</div>
+                          <div>
+                            <h3 style={{ fontSize: '12px', fontWeight: 700, color: '#1d4ed8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 4px' }}>Kekuatan Latar Belakang Anda</h3>
+                            <p style={{ fontSize: '13px', color: '#1e3a8a', lineHeight: 1.7, margin: 0 }}>{roadmap.background_strength}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Submit button */}
-          <button onClick={result ? handleReset : handleSubmit} disabled={isLoading} style={{
-            width: '100%', padding: '13px 0', borderRadius: '10px', fontSize: '13px', fontWeight: 700,
-            border: result ? '1.5px solid #e2e8f0' : 'none',
-            background: result ? '#f8fafc' : 'linear-gradient(135deg,#2563eb,#4f46e5)',
-            color: result ? '#64748b' : '#fff', cursor: isLoading ? 'not-allowed' : 'pointer',
-            opacity: isLoading ? 0.7 : 1, transition: 'all 0.2s',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-            boxShadow: result ? 'none' : '0 4px 16px rgba(37,99,235,0.2)', letterSpacing: '0.01em'
-          }}>
-            {isLoading
-              ? <><span style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Menganalisis...</>
-              : result ? 'Perbarui Analisis' : 'Mulai Analisis'
-            }
-          </button>
-        </aside>
-
-        {/* ── MAIN CONTENT */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', minWidth: 0 }}>
-          {!result ? (
-            <div style={{ height: '100%', minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center', maxWidth: '340px', padding: '0 16px' }}>
-                <div style={{ width: '64px', height: '64px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                  </svg>
+          {activeTab === 'roadmap' && (
+            <div style={{ maxWidth: '860px', margin: '0 auto' }}>
+              {!result ? (
+                /* EMPTY STATE FOR ROADMAP */
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                  <div style={{ width: '64px', height: '64px', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>🗺️</div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px' }}>Roadmap Belajar Belum Tersedia</h3>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.7, margin: '0 0 24px', maxWidth: '380px', marginLeft: 'auto', marginRight: 'auto' }}>
+                    Silakan isi profil karir Anda di tab Dashboard terlebih dahulu dan jalankan analisis AI untuk membuat roadmap belajar mingguan.
+                  </p>
+                  <button onClick={() => setActiveTab('dashboard')} style={{
+                    padding: '12px 24px', borderRadius: '10px', border: 'none',
+                    background: '#2563eb', color: '#fff', fontSize: '13px', fontWeight: 700,
+                    cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.15)', transition: 'background 0.2s'
+                  }}>
+                    Kembali ke Dashboard
+                  </button>
                 </div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px' }}>Siap untuk Analisis?</h3>
-                <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.7, margin: '0 0 20px' }}>
-                  Isi form di sidebar untuk memulai analisis karir berbasis AI dan dapatkan roadmap personal kamu.
-                </p>
-                <button className="mobile-cta" onClick={() => setSidebarOpen(true)} style={{
-                  display: 'none', background: 'linear-gradient(135deg,#2563eb,#4f46e5)',
-                  color: '#fff', border: 'none', padding: '12px 28px', borderRadius: '10px',
-                  fontWeight: 700, fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 16px rgba(37,99,235,0.2)'
-                }}>Mulai Analisis</button>
-              </div>
-            </div>
-          ) : (
-            <div style={{ maxWidth: '860px' }}>
-
-              {/* ── ANALISIS */}
-              <section id="analisis">
-                {/* Hero */}
-                <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'stretch' }}>
-                  <div style={cardStyle}>
-                    <div style={{ marginBottom: '10px' }}>
-                      {gap.match_score >= 60
-                        ? <span style={mkBadge('#1d4ed8','#eff6ff','#bfdbfe')}>Siap Apply</span>
-                        : gap.match_score >= 30
-                        ? <span style={mkBadge('#4f46e5','#f5f3ff','#ddd6fe')}>Perlu Latihan Intensif</span>
-                        : <span style={mkBadge('#475569','#f8fafc','#e2e8f0')}>Kesenjangan Tinggi</span>
-                      }
+              ) : (
+                /* TIMELINE ROADMAP VIEW */
+                <section id="roadmap">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+                    <div>
+                      <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.02em' }}>Peta Jalan Belajar (Roadmap)</h2>
+                      <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                        Berikut adalah langkah strategis mingguan yang dirancang AI khusus untuk Anda menuju karir: <strong style={{ color: '#475569' }}>{finalRole}</strong>.
+                      </p>
                     </div>
-                    <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', margin: '0 0 10px', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{finalRole}</h1>
-                    <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.7, margin: 0 }}>
-                      Analisis menunjukkan Anda menguasai <strong style={{ color: '#1e293b' }}>{gap.matched_skills.length} dari {gap.total_required} skill</strong> utama.
-                    </p>
-                  </div>
-                  <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '16px 20px', minWidth: '130px' }}>
-                    <div style={{ position: 'relative', width: '88px', height: '88px' }}>
-                      <svg width="88" height="88" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx="60" cy="60" r="52" fill="none" stroke="#e2e8f0" strokeWidth="10" />
-                        <circle cx="60" cy="60" r="52" fill="none"
-                          stroke={gap.match_score >= 60 ? '#2563eb' : gap.match_score >= 30 ? '#4f46e5' : '#64748b'}
-                          strokeWidth="10" strokeDasharray={`${gap.match_score * 3.267} 326.7`} strokeLinecap="round" />
-                      </svg>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontSize: '19px', fontWeight: 800, color: '#0f172a' }}>{gap.match_score}%</span>
-                      </div>
-                    </div>
-                    <p style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0 }}>Matching Rate</p>
-                  </div>
-                </div>
-
-                {/* Skills */}
-                <div className="skills-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                  <div style={{ ...cardStyle, borderColor: '#bfdbfe' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Skill Dikuasai</span>
-                      <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: '#2563eb' }}>{gap.matched_skills.length} skill</span>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {gap.matched_skills.length > 0
-                        ? gap.matched_skills.map(s => <span key={s} style={mkSkillBadge('#1d4ed8','#eff6ff','#bfdbfe')}>{s}</span>)
-                        : <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Belum ada yang match</p>}
-                    </div>
-                  </div>
-                  <div style={{ ...cardStyle, borderColor: '#e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Gap Kompetensi</span>
-                      <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, color: '#64748b' }}>{gap.missing_skills.length} skill</span>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {gap.missing_skills.length > 0
-                        ? gap.missing_skills.map(s => <span key={s} style={mkSkillBadge('#475569','#f1f5f9','#e2e8f0')}>{s}</span>)
-                        : <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>Semua skill sudah dimiliki!</p>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Background strength */}
-                {roadmap?.background_strength && (
-                  <div style={{ ...cardStyle, borderLeft: '3px solid #93c5fd', background: '#f0f7ff', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
-                        <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                      </svg>
-                      <div>
-                        <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#3b82f6', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 5px' }}>Kekuatan Background Anda</h3>
-                        <p style={{ fontSize: '13px', color: '#334155', lineHeight: 1.7, margin: 0 }}>{roadmap.background_strength}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </section>
-
-              {/* ── ROADMAP */}
-              {roadmap?.weekly_plan && (
-                <section id="roadmap" style={{ marginTop: '40px' }}>
-                  <div style={{ marginBottom: '24px' }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '0 0 6px', letterSpacing: '-0.02em' }}>Roadmap Belajar</h2>
-                    {roadmap.estimated_duration && (
-                      <span style={{ fontSize: '12px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px', background: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd', display: 'inline-block', marginBottom: '6px' }}>
-                        {roadmap.estimated_duration}
+                    {roadmap?.estimated_duration && (
+                      <span style={{ fontSize: '13px', fontWeight: 700, padding: '6px 16px', borderRadius: '20px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', display: 'inline-block' }}>
+                        ⏱️ Estimasi: {roadmap.estimated_duration}
                       </span>
                     )}
-                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
-                      Langkah strategis menuju {finalRole} Profesional
-                    </p>
                   </div>
 
                   <div className="timeline-container">
@@ -505,7 +589,6 @@ export default function Dashboard() {
                     })}
                   </div>
 
-
                   {/* Recommended courses */}
                   {roadmap?.recommended_courses && (
                     <div style={{ marginTop: '32px' }}>
@@ -543,14 +626,28 @@ export default function Dashboard() {
                   )}
                 </section>
               )}
+            </div>
+          )}
 
-              {/* Footer */}
-              <footer style={{ marginTop: '48px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', textAlign: 'center' }}>
-                <p style={{ fontSize: '11px', color: '#94a3b8', margin: '0 0 6px' }}>© 2026 ARAH — Naimatul Ulumiyah. All rights reserved.</p>
-                <a href="https://linkedin.com" target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#3b82f6', textDecoration: 'none' }}>
-                  Mari bekerjasama di LinkedIn: Naimatul Ulumiyah →
-                </a>
-              </footer>
+          {activeTab === 'about' && (
+            <div style={{ maxWidth: '860px', margin: '0 auto' }}>
+              <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '0 0 12px', letterSpacing: '-0.02em' }}>Tentang ARAH Platform</h2>
+                <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.7, margin: '0 0 16px' }}>
+                  <strong>ARAH</strong> adalah platform navigasi karir berbasis kecerdasan buatan (AI) yang dirancang untuk membantu mahasiswa, lulusan baru, maupun profesional yang ingin berpindah karir (*career switcher*). 
+                </p>
+                <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.7, margin: '0 0 24px' }}>
+                  Platform ini mengevaluasi kesenjangan antara keahlian yang Anda miliki saat ini (baik yang diisi secara manual maupun diekstrak langsung dari file CV PDF Anda) dengan target karir yang dituju. AI kemudian memformulasikan peta jalan belajar (learning roadmap) bertahap yang dilengkapi dengan modul mingguan, fokus pembelajaran, serta rekomendasi sumber belajar gratis/terpilih (seperti YouTube, artikel, dan kursus platform) untuk membantu Anda mencapai impian karir tersebut.
+                </p>
+                
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', borderTop: '1px solid #f1f5f9', paddingTop: '20px', margin: '0 0 12px' }}>Developer & Hak Cipta</h3>
+                <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.6, margin: '0 0 6px' }}>
+                  Platform ini dikembangkan oleh <strong>Naimatul Ulumiyah</strong>.
+                </p>
+                <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.6, margin: 0 }}>
+                  Semua hak cipta dilindungi. © 2026 ARAH.
+                </p>
+              </div>
             </div>
           )}
         </main>
@@ -585,7 +682,7 @@ export default function Dashboard() {
           flex-direction: column;
           gap: 16px;
           padding: 20px 16px;
-          max-height: calc(100vh - 56px);
+          max-height: calc(100vh - 64px);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -597,7 +694,55 @@ export default function Dashboard() {
             border-right: none !important;
             opacity: 0;
             pointer-events: none;
+            overflow: hidden !important;
           }
+        }
+
+        /* Navigation Button Styles */
+        .nav-button {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          width: 100%;
+          padding: 12px 16px;
+          border-radius: 12px;
+          border: none;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          background: transparent;
+          color: #64748b;
+          text-align: left;
+          position: relative;
+        }
+        .nav-button:hover {
+          background: #f8fafc;
+          color: #1e293b;
+        }
+        .nav-button.active {
+          background: #eff6ff !important;
+          color: #2563eb !important;
+        }
+        .nav-button.active::after {
+          content: '';
+          position: absolute;
+          right: 0;
+          top: 25%;
+          bottom: 25%;
+          width: 4px;
+          background: #2563eb;
+          border-radius: 4px 0 0 4px;
+        }
+        .nav-icon {
+          color: #94a3b8;
+          transition: color 0.2s;
+        }
+        .nav-button:hover .nav-icon {
+          color: #475569;
+        }
+        .nav-button.active .nav-icon {
+          color: #2563eb;
         }
 
         /* Timeline styles */
@@ -653,11 +798,11 @@ export default function Dashboard() {
 
           .sidebar {
             position: fixed !important;
-            top: 56px !important; left: 0 !important;
+            top: 64px !important; left: 0 !important;
             width: 85% !important; max-width: 320px !important;
             min-width: unset !important;
-            height: calc(100vh - 56px) !important;
-            max-height: calc(100vh - 56px) !important;
+            height: calc(100vh - 64px) !important;
+            max-height: calc(100vh - 64px) !important;
             transform: translateX(-100%);
             transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
             z-index: 45;

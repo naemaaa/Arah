@@ -55,6 +55,24 @@ def get_required_skills_from_data(target_role: str, level: str = "junior") -> li
     sorted_skills = sorted(skill_count.items(), key=lambda x: x[1], reverse=True)
     return [skill for skill, _ in sorted_skills]
 
+def generate_skills_from_llm(target_role: str, level: str = "junior") -> list[str]:
+    prompt = f"""
+Kamu adalah pakar karir IT. Tentukan daftar 10 skill (teknis dan non-teknis) yang paling penting dan wajib dikuasai untuk pekerjaan:
+Role: {target_role}
+Level: {level}
+
+Kembalikan HANYA JSON array of strings. Contoh: ["React", "CSS", "UI Design"]
+Jangan tambahkan penjelasan apapun.
+"""
+    try:
+        response = llm.invoke([HumanMessage(content=prompt)])
+        raw = response.content.strip()
+        if "```" in raw:
+            raw = raw.split("```")[1].replace("json", "").strip()
+        return json.loads(raw)
+    except:
+        return []
+
 def analyze_gap(
     user_skills: list[str],
     target_role: str,
@@ -67,6 +85,9 @@ def analyze_gap(
     else:
         required_skills = get_required_skills_from_data(target_role, level)
         source = "database"
+        if not required_skills:
+            required_skills = generate_skills_from_llm(target_role, level)
+            source = "llm_fallback"
 
     user_skills_lower = [s.lower() for s in user_skills]
 
