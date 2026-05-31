@@ -216,12 +216,9 @@ export default function Dashboard() {
               {!result ? (
                 /* SETUP WIZARD (Form Kustomisasi) */
                 <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '28px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px', marginBottom: '24px' }}>
-                    <div style={{ width: '40px', height: '40px', background: '#eff6ff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🚀</div>
-                    <div>
-                      <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Siapkan Profil Karir Anda</h2>
-                      <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>Lengkapi data di bawah ini untuk memulai analisis berbasis AI.</p>
-                    </div>
+                  <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '16px', marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Siapkan Profil Karir Anda</h2>
+                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: '2px 0 0' }}>Lengkapi data di bawah ini untuk memulai analisis berbasis AI.</p>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 768 ? '1fr 1fr' : '1fr', gap: '24px', marginBottom: '24px' }}>
