@@ -215,15 +215,42 @@ export default function Dashboard() {
                       {/* Target Karir */}
                       <div>
                         <label style={labelStyle}>Target Karir</label>
-                        <select value={form.target_role} onChange={e => setForm({ ...form, target_role: e.target.value })} style={inputStyle}>
-                          <option value="">Pilih role karir target...</option>
-                          {Object.entries(ROLE_GROUPS).map(([groupName, roles]) => (
-                            <optgroup key={groupName} label={groupName}>
-                              {roles.map(r => <option key={r} value={r}>{r}</option>)}
-                            </optgroup>
-                          ))}
-                          <option value="lainnya">Lainnya (Kustom)...</option>
-                        </select>
+                        <div style={{ position: 'relative' }}>
+                          <select 
+                            value={form.target_role} 
+                            onChange={e => setForm({ ...form, target_role: e.target.value })} 
+                            style={{ 
+                              ...inputStyle, 
+                              appearance: 'none', 
+                              WebkitAppearance: 'none', 
+                              MozAppearance: 'none', 
+                              paddingRight: '36px', 
+                              cursor: 'pointer' 
+                            }}
+                          >
+                            <option value="">Pilih role karir target...</option>
+                            {Object.entries(ROLE_GROUPS).map(([groupName, roles]) => (
+                              <optgroup key={groupName} label={groupName} style={{ fontWeight: 600, color: '#475569', background: '#fff' }}>
+                                {roles.map(r => <option key={r} value={r} style={{ fontWeight: 500, color: '#1e293b', background: '#fff' }}>{r}</option>)}
+                              </optgroup>
+                            ))}
+                            <option value="lainnya">Lainnya (Kustom)...</option>
+                          </select>
+                          <div style={{ 
+                            position: 'absolute', 
+                            right: '12px', 
+                            top: '50%', 
+                            transform: 'translateY(-50%)', 
+                            pointerEvents: 'none', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            color: '#64748b' 
+                          }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                          </div>
+                        </div>
                         {form.target_role === 'lainnya' && (
                           <input type="text" placeholder="Contoh: Prompt Engineer" value={customRole}
                             onChange={e => setCustomRole(e.target.value)} style={{ ...inputStyle, marginTop: '8px' }} />
