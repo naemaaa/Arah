@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import { LayoutDashboard, Compass, Info, ArrowRight, Sparkles, Loader2, RefreshCw } from 'lucide-react'
 import { analyzeFromForm, uploadCV, analyzeFromCV } from '../services/api'
-import logo from '../assets/arah-logo.png'
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -124,8 +123,7 @@ export default function Dashboard() {
               <line x1="4" y1="18" x2="20" y2="18" />
             </svg>
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src={logo} alt="Arah" style={{ width: '46px', height: '46px', objectFit: 'contain' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ fontWeight: 800, fontSize: '20px', color: '#2563eb', letterSpacing: '0.06em' }}>ARAH</span>
           </div>
         </div>
