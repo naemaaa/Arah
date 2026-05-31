@@ -123,8 +123,26 @@ export default function Dashboard() {
               <line x1="4" y1="18" x2="20" y2="18" />
             </svg>
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ fontWeight: 800, fontSize: '20px', color: '#2563eb', letterSpacing: '0.06em' }}>ARAH</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ 
+              width: '36px', 
+              height: '36px', 
+              background: 'linear-gradient(135deg, #2563eb, #4f46e5)', 
+              borderRadius: '10px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(37,99,235,0.2)' 
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+              </svg>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontWeight: 800, fontSize: '18px', color: '#0f172a', letterSpacing: '0.04em', lineHeight: 1.1 }}>ARAH</span>
+              <span style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '1px' }}>AI Career Guide</span>
+            </div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
